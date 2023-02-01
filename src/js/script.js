@@ -1,5 +1,7 @@
 {
   ('use strict');
+  const favoriteBooks = [];
+  const filters = [];
 
   const templates = {
     booksMenu: Handlebars.compile(
@@ -19,33 +21,75 @@
     }
   }
   render();
-  const favoriteBooks = [];
+  
+  function filterBooks(){
+    const books = dataSource.books;
+    for(let book of books){
+      const imgLink = document.querySelector('.book__image[data-id="'+ book.id + '"]');
+      console.log('imgLink', imgLink);
+      let shouldBeHidden = false;
+      for(let filter of filters){
+        if(!book.details[filter]){
+          shouldBeHidden = true;
+          break;
+        }
+      }
+      if(shouldBeHidden){
+        imgLink.classList.add('hidden');
+      }
+      else {
+        imgLink.classList.remove('hidden');
+      } 
+    }
+  }
 
   function initActions() {
-    const bookContainer = document.querySelector('.books-list');
-    bookContainer.addEventListener('dblclick', function (event) {
+    const filterWrapper = document.querySelector('.filters');
+    console.log('filterWrapper', filterWrapper);
+    filterWrapper.addEventListener('change', function (event) {
+      event.preventDefault();
+      const filterLink = event.target;
+      console.log('filetLink', filterLink);
+      console.log('filterLink.value', filterLink.value);
+
+      if (filterLink.tagName === 'INPUT' && filterLink.name === 'filter' && filterLink.type === 'checkbox') {
+        if (filterLink.checked) {
+          if (filters.indexOf(filterLink.value) == -1) {
+            filters.push(filterLink.value);
+          }  
+        }
+        else {
+          const filterToRemove = filters.indexOf(filterLink.value);
+          filters.splice(filterToRemove, 1);
+        } 
+      }
+      filterBooks();
+      console.log('tablica filter', filters);
+      
+    });
+    const booksWrapper = document.querySelector('.books-list');
+    booksWrapper.addEventListener('dblclick', function (event) {
       event.preventDefault();
       const element = this;
-      console.log('event.taget', event.target);
+      const imgLink = event.target;
+      console.log('imgLink', imgLink);
       console.log('element', element);
-      console.log(
-        event.target.offsetParent.classList.contains('book__image')
-      );
-      if (event.target.offsetParent.classList.contains('book__image')) {
+      console.log(imgLink.offsetParent.classList.contains('book__image'));
+      if (imgLink.offsetParent.classList.contains('book__image')) {
         console.log('element na okadce', element);
 
-        const bookId = event.target.offsetParent.getAttribute('data-id');
+        const bookId = imgLink.offsetParent.getAttribute('data-id');
         if (favoriteBooks.indexOf(bookId) == -1) {
           favoriteBooks.push(bookId);
-          event.target.offsetParent.classList.add('favorite');
+          imgLink.offsetParent.classList.add('favorite');
         } else {
           const idToRemove = favoriteBooks.indexOf(bookId);
           favoriteBooks.splice(idToRemove, 1);
-          event.target.offsetParent.classList.remove('favorite');
+          imgLink.offsetParent.classList.remove('favorite');
         }
       }
     });
-    console.log('tablica', favoriteBooks);
+    
   }
   initActions();
 }
